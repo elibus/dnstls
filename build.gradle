@@ -1,0 +1,60 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.1'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'jacoco'
+	id 'checkstyle'
+}
+
+group = 'org.freaknet.elibus'
+version = '0.0.1'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+dependencies {
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-reactor-netty'
+
+    checkstyle 'com.puppycrawl.tools:checkstyle:9.0'
+
+	testImplementation 'dnsjava:dnsjava:2.1.1'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+bootJar {
+  layered {
+    	enabled = true
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = false
+    }
+}
+test.finalizedBy jacocoTestReport
+
+checkstyle {
+    // Checkstyle configs are not in the default place => define their location
+    configDirectory = file('config/checkstyle')
+    maxWarnings = 20
+    ignoreFailures false
+    showViolations true
+    checkstyleTest.enabled = false
+}
