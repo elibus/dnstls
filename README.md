@@ -101,19 +101,6 @@ $ docker run -d -p 853:8553/tcp -p 853:8553/udp -e dnstls_tcp_threads=10 -e dnst
 
 ## Implementation choices
 
-### Language choice
-
-I have chosen Java as language for two main reasons:
- - it's fit for the job
- - it's the primary language I have been working with over last few years
-
-It may not be optimal compared to a `golang` or `rust` implementation as it has a bigger system footprint, however I needed to optimize my time to deliver something decent (delivery is a feature).
-I consider this also to be a general principle: understand what you can deliver with the skills you have, optimization can be done later when and if needed. 
-
-### Framework of choice
-
-I am using Spring Boot because it got me started quickly and I can use dependency inversion without too much of reinventing the wheel. It also makes it easy to create a fat jar and a docker container.
-
 ### Multi-threading
 
 The implementation is multi-threaded, this is required to serve more requests in parallel.
@@ -129,23 +116,6 @@ A workaround, which I implemented, is to bind multiple times on the same port le
 
 - The implementation uses `EpollEventLoopGroup` instead of the default `Nio`. On Linux this perform better as it uses the native transport and the `epoll` system call.
 - The TCP server and the backend client use the `SO_KEEPALIVE` option to reuse connections and the `TCP_NODELAY` option to disable the TCP slow start
-
-##  Imagine this proxy being deployed in an infrastructure. What would be the security concerns you would raise?
-
-The proxy is meant to secure traffic between clients not supporting DNS over TLS and a DoT server. To be an effective measure, no unencrypted traffic should exit the host especially in a shared environment. An effective way could be to have a local instance of `dnstls` listening on the loopback interface only. The host can then be configured to use 127.0.0.1 as DNS.
-
-## How would you integrate that solution in a distributed, microservices-oriented and containerized architecture?
-
-One solution could be to have one instance per container, in general this could be acceptable as the overhead should be minimal.
-A more efficient solution could be to deploy a local instance of `dnstls` listening on a local private virtualised network for the physical host, and make this network visible to all containers running on a single physical host thus sharing the same `dnstls` instance. This configuration not only requires less resources but also can implement a probably more effective central DNS cache as multiple containers share the same instance.
-
-## What other improvements do you think would be interesting to add to the project?
-
- - Caching: `dnstls` could cache DNS responses to improve speed of resolution for frequently requests queries and reduce network traffic
- - DNS server pool: `dnstls` supports 1 DNS server. Normally this should not be a concern with DNS servers like Cloudfare, however it would be better to configure a pool of DNS servers.
- - Connection pooling: the current implementation does not support connection pooling. I would make sense to add it to improve latency as TCP connections can be kept open and reused.
- - Usage statistics and a health endpoint could be exposed to monitor the service and collect metrics.
- - To reduce the application footprint it could be compiled as native with graalVM, however at the moment netty is not fully supported.
 
 
 ## Performance test
